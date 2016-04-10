@@ -9,7 +9,7 @@ class Test {
 		Scanner in = new Scanner(System.in);
 		in.useDelimiter("\\Z");
 		try {
-			Parser2 p = new Parser2(in.next());
+			Parser p = new Parser(in.next());
 			p.parse();
 			System.out.println("success");
 		} catch (SyntaxError e) {

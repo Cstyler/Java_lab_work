@@ -1,59 +1,100 @@
+
 /**
  * Created by khan on 30.03.16. Lab#6
  */
 
-/* <A> ::= IDENT ( <B> ) | NUMBER | STRING
-   <B> ::= <A> <B> | ε
+/*
+<Tm> ::= template < <Args> >
+<Args> ::= <Arg> <Tail>
+<Tail> ::= , <Args> |
+			e
+<Arg> ::= typename <Name>
+		| int <Name>
+		| <Tm> <Class>
+<Name> ::= IDENT |
+		e
+<Class> ::= class IDENT |
+			e
 */
 
 class Parser {
-	private Token currentToken;
+    private Token sym;
 
-	public Parser(String text) throws SyntaxError {
-		currentToken = new Token(text);
-	}
+    Parser(String text) throws SyntaxError {
+        sym = new Token(text);
+    }
 
-	private void expect(TokenType type) throws SyntaxError {
-		if (!currentToken.matches(type)) {
-			currentToken.throwError(type + " expected");
-		}
-		nextToken();
-	}
+    private void expect(TokenType type) throws SyntaxError {
+        if (!sym.matches(type)) {
+            sym.throwError(type + " expected");
+        }
+        nextToken();
+    }
 
-	private void nextToken() throws SyntaxError {
-		currentToken = currentToken.next();
-	}
+    private void nextToken() throws SyntaxError {
+        sym = sym.next();
+    }
 
-	void parse() throws SyntaxError {
-		parseA();
-		expect(TokenType.END_OF_TEXT);
-	}
+    void parse() throws SyntaxError {
+        tm();
+        expect(TokenType.END_OF_TEXT);
+    }
 
-	private void parseA() throws SyntaxError {
-		if (currentToken.matches(TokenType.IDENT)) {
-			System.out.println("<A> ::= IDENT ( <B> )");
-			nextToken();
-			expect(TokenType.LEFT_PAREN);
-			parseB();
-			expect(TokenType.RIGHT_PAREN);
-		} else if (currentToken.matches(TokenType.NUMBER)) {
-			System.out.println("A ::= NUMBER");
-			nextToken();
-		} else if (currentToken.matches(TokenType.STRING)) {
-			System.out.println("A ::= STRING");
-			nextToken();
-		} else {
-			currentToken.throwError("ident, number or string expected");
-		}
-	}
+    private void tm() throws SyntaxError {
+        System.out.println("<Tm> ::= template < <Args> >");
+        expect(TokenType.TEMPLATE);
+        expect(TokenType.LEFT_BRACKET);
+        args();
+        expect(TokenType.RIGHT_BRACKET);
+    }
 
-	private void parseB() throws SyntaxError {
-		if (currentToken.matches(TokenType.STRING, TokenType.IDENT, TokenType.NUMBER)) {
-			System.out.println("<B> ::= <A> <B>");
-			parseA();
-			parseB();
-		} else {
-			System.out.println("<B> ::= ε");
-		}
-	}
+    private void args() throws SyntaxError {
+        System.out.println("<Args> ::= <Arg> <Tail>");
+        arg();
+        tail();
+    }
+
+    private void tail() throws SyntaxError {
+        if (sym.matches(TokenType.COMMA)) {
+            System.out.println("<Tail> ::= , <Args>");
+            nextToken();
+            args();
+        } else {
+            System.out.println("<Tail> ::= e");
+        }
+    }
+
+    private void arg() throws SyntaxError {
+        if (sym.matches(TokenType.TYPENAME)) {
+            System.out.println("<Arg> ::= typename <Name>");
+            nextToken();
+            name();
+        } else if (sym.matches(TokenType.INT)) {
+            System.out.println("<Arg> ::= int <Name>");
+            nextToken();
+            name();
+        } else {
+            tm();
+            class_f();
+        }
+    }
+
+    private void name() throws SyntaxError {
+        if (sym.matches(TokenType.IDENT)) {
+            nextToken();
+            System.out.println("<Name> ::= IDENT");
+        } else {
+            System.out.println("<Name> ::= e");
+        }
+    }
+
+    private void class_f() throws SyntaxError {
+        if (sym.matches(TokenType.CLASS)) {
+            System.out.println("<Class> ::= class IDENT ");
+            nextToken();
+            expect(TokenType.IDENT);
+        } else {
+            System.out.println("<Class> ::= e");
+        }
+    }
 }

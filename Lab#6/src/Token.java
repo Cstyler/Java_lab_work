@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * Created by khan on 30.03.16. Lab#6
@@ -8,6 +9,12 @@ class Token {
 	private final Position start;
 	private Position follow;
 	private TokenType tokenType;
+	private static final HashMap<String, TokenType> keywords = new HashMap<String, TokenType>() {{
+		put("template", TokenType.TEMPLATE);
+		put("typename", TokenType.TYPENAME);
+		put("int", TokenType.INT);
+		put("class", TokenType.CLASS);
+	}};
 
 	Token(String text) throws SyntaxError {
 		this(new Position(text));
@@ -17,33 +24,23 @@ class Token {
 		start = currentPos.skipWhile(Character::isWhitespace);
 		follow = start.skip();
 		switch (start.getChar()) {
-			case '(':
-				tokenType = TokenType.LEFT_PAREN;
-				break;
-			case ')':
-				tokenType = TokenType.RIGHT_PAREN;
-				break;
 			case -1:
 				tokenType = TokenType.END_OF_TEXT;
 				break;
-			case '"':
-				follow = follow.skipWhile(c -> c != '"' && c != '\n' && c != -1);
-				if (follow.getChar() != '"') {
-					throw new SyntaxError("newline in string literal, \" expected", follow);
-				}
-				follow = follow.skip();
-				tokenType = TokenType.STRING;
+			case ',':
+				tokenType = TokenType.COMMA;
+				break;
+			case '<':
+				tokenType = TokenType.LEFT_BRACKET;
+				break;
+			case '>':
+				tokenType = TokenType.RIGHT_BRACKET;
 				break;
 			default:
 				if (start.satisfies(Character::isLetter)) {
 					follow = follow.skipWhile(Character::isLetterOrDigit);
-					tokenType = TokenType.IDENT;
-				} else if (start.satisfies(Character::isDigit)) {
-					follow = follow.skipWhile(Character::isDigit);
-					if (follow.satisfies(Character::isLetter)) {
-						throw new SyntaxError("delimiter expected", follow);
-					}
-					tokenType = TokenType.NUMBER;
+					TokenType keywordType = keywords.get(start.getSubString(follow));
+					tokenType = keywordType != null ? keywordType : TokenType.IDENT;
 				} else {
 					throwError("invalid character");
 				}
